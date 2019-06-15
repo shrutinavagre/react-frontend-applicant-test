@@ -1,13 +1,20 @@
+// Imported customer components and services
 import { getUsers } from "../services/usersService";
 import { paginate } from "../utils/paginate";
-// import Pagination from "./pagination";
+import Input from "./input";
+import NewUser from "./userForm";
 
+// Imported inbuild and third party libraries
 import React, { Component } from "react";
 import _ from "lodash";
 import Joi from "joi-browser";
-// import NewUser from "./userForm";
+
+// Below is State Component
 
 class Users extends Component {
+  /*
+  Declared state properties to use afterwards while rendering dom elements.
+  */
   state = {
     users: [],
     currentPage: 1,
@@ -20,6 +27,9 @@ class Users extends Component {
     errors: {}
   };
 
+  /* 
+  Below is mentioed schema to validate the two input fields i.e. name and email. Here joi-browser library is used which provide various mathods to validate the object.
+  */
   schema = {
     name: Joi.string()
       .required()
@@ -29,6 +39,14 @@ class Users extends Component {
       .email({ minDomainSegments: 2 })
       .label("Email")
   };
+
+  /*
+  validate() checks the data object if data properties are valid as per Joi schema.
+ 
+  - If valid, function call returns null.
+ 
+  - If not valid, i.e. error is returned, error details are mapped into state property 'errors' to later display it on webpage while re-rendering components.
+  */
 
   validate = () => {
     const { error } = Joi.validate(this.state.data, this.schema, {
@@ -44,26 +62,42 @@ class Users extends Component {
     return errors;
   };
 
+  /* 
+  Asynchronous componentDidMount() fetches the data from apiEndpoint. It handles the promise return by http call and set the users property with that received data.
+  */
   async componentDidMount() {
     const { data: users } = await getUsers();
     this.setState({ users });
   }
 
+  /*
+  Below handlePageChange() is used only to update the currentPage property each time user click next/previous button
+  */
   handlePageChange = page => {
     this.setState({ currentPage: page });
   };
 
+  /*
+  This handlechange function updates the satate property data everytime user changes values in input fileds ("name" & "email")
+  */
   handleChange = ({ currentTarget: input }) => {
     const data = { ...this.state.data };
     data[input.name] = input.value;
     this.setState({ data });
   };
 
+  /*
+  Return the className property for P tag to display name.
+  If user's email includes .biz returns "green" else "black".
+  */
   highlightEmail = ({ email }) => {
     return email.includes(".biz") ? "green" : "black";
   };
 
-  onSubmit(event, allUsers) {
+  /*
+  onSubmit() checks for the input validation using validate(). If there is no error return, it call adduser() to add the user.
+  */
+  onSubmit(event) {
     event.preventDefault();
 
     const errors = this.validate();
@@ -73,6 +107,9 @@ class Users extends Component {
     this.adduser();
   }
 
+  /* 
+  addUser() add the new user data into state property users. 
+  */
   adduser = () => {
     let users = this.state.users;
 
@@ -81,6 +118,11 @@ class Users extends Component {
     this.setState({ users });
   };
 
+  /*
+  getUserData() is used to load the data from state property. Before rendering the elements, the data is sorted and filtered according to pagination.
+
+  Along with that, nextPageUsers are checked to disable the next page button.
+  */
   getUserData = () => {
     const { users, sortColumn, currentPage, pageSize } = this.state;
 
@@ -94,6 +136,9 @@ class Users extends Component {
   };
 
   render() {
+    /*
+    Here object distructuing is done on properties in state.
+    */
     const { currentPage, data, errors } = this.state;
     const { paginatedUsers, nextPageUsers, users } = this.getUserData();
 
